@@ -1,0 +1,274 @@
+#
+#Github https://github.com/MCGameSK/Anti-Automatic-Fishing
+#
+
+
+
+options:
+    WrongKickMax: 3 #Mercy
+    ChanceAntiAuto: 10 #Out of 100
+
+
+
+on load:
+    delete {commands::*}
+    set {commands::sneak} to "[Sneak]"
+    set {commands::left} to "[LMB]"
+    set {commands::jump} to "[Jump]"
+
+
+
+on join:
+    delete {wrong::%player's uuid%}
+    delete {antiAutoTimer::%player's uuid%}
+    delete {requiredCommands::%player's uuid%::*} #
+    set {requiredCommandsText::%player's uuid%} to ""
+
+
+
+on fish:
+    if "%event.getState()%" is "CAUGHT_FISH":
+        if {antiAutoTimer::%player's uuid%} is not set:
+            if chance of {@ChanceAntiAuto}%:
+
+                dismount any passenger from player's vehicle
+
+                set {antiAutoTimer::%player's uuid%} to 10
+
+                delete {requiredCommands::%player's uuid%::*} #
+                set {requiredCommandsText::%player's uuid%} to ""
+                loop 2 times:
+                    add random element of {commands::*} to {requiredCommands::%player's uuid%::*}
+                loop {requiredCommands::%player's uuid%::*}:
+                    set {requiredCommandsText::%player's uuid%} to "%{requiredCommandsText::%player's uuid%}% &c%loop-value%&r "
+
+                send title {requiredCommandsText::%player's uuid%} with subtitle "&oAnti Auto-Fishing, Press above keys" to player for 10 seconds
+
+
+
+on left click:
+    if {antiAutoTimer::%player's uuid%} is set:
+        if first element of {requiredCommands::%player's uuid%::*} is {commands::left}:
+            play sound "block.note_block.bell" with volume 1 and pitch 2 for player
+            remove {commands::left} from {requiredCommands::%player's uuid%::*}
+
+            if first element of {requiredCommands::%player's uuid%::*} is not set:
+                send title "&aConfirmed" with subtitle " " to player for 1 seconds
+                delete {wrong::%player's uuid%}
+                delete {antiAutoTimer::%player's uuid%}
+                delete {requiredCommands::%player's uuid%::*}
+                set {requiredCommandsText::%player's uuid%} to ""
+                exit
+
+            set {requiredCommandsText::%player's uuid%} to ""
+            loop {requiredCommands::%player's uuid%::*}:
+                set {requiredCommandsText::%player's uuid%} to "%{requiredCommandsText::%player's uuid%}% &c%loop-value%&r "
+
+            send title {requiredCommandsText::%player's uuid%} with subtitle "&oAnti Auto-Fishing, Press above keys" to player for 10 seconds
+            
+        else:
+            play sound "entity.iron_golem.repair" with volume 1 and pitch 1.6 for player
+            send title "&cWrong" with subtitle " " to player for 1 seconds
+
+            if {wrong::%player's uuid%} is not set:
+                set {wrong::%player's uuid%} to 0
+            add 1 to {wrong::%player's uuid%}
+            message "&c&lWrong answer (%{wrong::%player's uuid%}% / %"{@WrongKickMax}"%)"
+            if {wrong::%player's uuid%} >= {@WrongKickMax}:
+                delete {wrong::%player's uuid%}
+                delete {antiAutoTimer::%player's uuid%}
+                delete {requiredCommands::%player's uuid%::*}
+                set {requiredCommandsText::%player's uuid%} to ""
+
+                dismount any passenger from vehicle of player
+                dismount any passenger from player
+                send title "&c&lPenalty" with subtitle "Three consecutive incorrect answers" to player for 3 seconds
+                if {tpLocation} is set:
+                    teleport player to {tpLocation}
+                else:
+                    set {_lookUp} to player's location
+                    set pitch of {_lookUp} to -90
+                    teleport player to {_lookUp}
+
+                if {autoKick} is true:
+                    kick player due to "&4&lSuspected automatic fishing"
+                
+                exit
+
+            delete {antiAutoTimer::%player's uuid%}
+            delete {requiredCommands::%player's uuid%::*}
+            set {requiredCommandsText::%player's uuid%} to ""
+
+            exit
+
+
+
+
+on sneak toggle:
+    if player is not sneaking:
+        if {antiAutoTimer::%player's uuid%} is set:
+            if first element of {requiredCommands::%player's uuid%::*} is {commands::sneak}:
+                play sound "block.note_block.bell" with volume 1 and pitch 2 for player
+                remove {commands::sneak} from {requiredCommands::%player's uuid%::*}
+
+                if first element of {requiredCommands::%player's uuid%::*} is not set:
+                    send title "&aConfirmed" with subtitle " " to player for 1 seconds
+                    delete {wrong::%player's uuid%}
+                    delete {antiAutoTimer::%player's uuid%}
+                    delete {requiredCommands::%player's uuid%::*}
+                    set {requiredCommandsText::%player's uuid%} to ""
+
+                    exit
+
+                set {requiredCommandsText::%player's uuid%} to ""
+                loop {requiredCommands::%player's uuid%::*}:
+                    set {requiredCommandsText::%player's uuid%} to "%{requiredCommandsText::%player's uuid%}% &c%loop-value%&r "
+
+                send title {requiredCommandsText::%player's uuid%} with subtitle "&oAnti Auto-Fishing, Press above keys" to player for 10 seconds
+
+            else:
+                play sound "entity.iron_golem.repair" with volume 1 and pitch 1.6 for player
+                send title "&cWrong" with subtitle " " to player for 1 seconds
+
+                if {wrong::%player's uuid%} is not set:
+                    set {wrong::%player's uuid%} to 0
+                add 1 to {wrong::%player's uuid%}
+                message "&c&lWrong answer (%{wrong::%player's uuid%}% / %"{@WrongKickMax}"%)"
+                if {wrong::%player's uuid%} >= {@WrongKickMax}:
+                    delete {wrong::%player's uuid%}
+                    delete {antiAutoTimer::%player's uuid%}
+                    delete {requiredCommands::%player's uuid%::*}
+                    set {requiredCommandsText::%player's uuid%} to ""
+
+                    dismount any passenger from vehicle of player
+                    dismount any passenger from player
+                    send title "&c&lPenalty" with subtitle "Three consecutive incorrect answers" to player for 3 seconds
+                    if {tpLocation} is set:
+                        teleport player to {tpLocation}
+                    else:
+                        set {_lookUp} to player's location
+                        set pitch of {_lookUp} to -90
+                        teleport player to {_lookUp}
+
+                    if {autoKick} is true:
+                        kick player due to "&4&lSuspected automatic fishing"
+                    
+                    exit
+
+                delete {antiAutoTimer::%player's uuid%}
+                delete {requiredCommands::%player's uuid%::*}
+                set {requiredCommandsText::%player's uuid%} to ""
+
+                exit
+
+
+
+on jump:
+    if {antiAutoTimer::%player's uuid%} is set:
+        if first element of {requiredCommands::%player's uuid%::*} is {commands::jump}:
+            play sound "block.note_block.bell" with volume 1 and pitch 2 for player
+            remove {commands::jump} from {requiredCommands::%player's uuid%::*}
+
+            if first element of {requiredCommands::%player's uuid%::*} is not set:
+                send title "&aConfirmed" with subtitle " " to player for 1 seconds
+                delete {wrong::%player's uuid%}
+                delete {antiAutoTimer::%player's uuid%}
+                delete {requiredCommands::%player's uuid%::*}
+                set {requiredCommandsText::%player's uuid%} to ""
+                exit
+
+            set {requiredCommandsText::%player's uuid%} to ""
+            loop {requiredCommands::%player's uuid%::*}:
+                set {requiredCommandsText::%player's uuid%} to "%{requiredCommandsText::%player's uuid%}% &c%loop-value%&r "
+
+            send title {requiredCommandsText::%player's uuid%} with subtitle "&oAnti Auto-Fishing, Press above keys" to player for 10 seconds
+            
+        else:
+            play sound "entity.iron_golem.repair" with volume 1 and pitch 1.6 for player
+            send title "&cWrong" with subtitle " " to player for 1 seconds
+
+            if {wrong::%player's uuid%} is not set:
+                set {wrong::%player's uuid%} to 0
+            add 1 to {wrong::%player's uuid%}
+            message "&c&lWrong answer (%{wrong::%player's uuid%}% / %"{@WrongKickMax}"%)"
+            if {wrong::%player's uuid%} >= {@WrongKickMax}:
+                delete {wrong::%player's uuid%}
+                delete {antiAutoTimer::%player's uuid%}
+                delete {requiredCommands::%player's uuid%::*}
+                set {requiredCommandsText::%player's uuid%} to ""
+
+                dismount any passenger from vehicle of player
+                dismount any passenger from player
+                send title "&c&lPenalty" with subtitle "Three consecutive incorrect answers" to player for 3 seconds
+                if {tpLocation} is set:
+                    teleport player to {tpLocation}
+                else:
+                    set {_lookUp} to player's location
+                    set pitch of {_lookUp} to -90
+                    teleport player to {_lookUp}
+
+                if {autoKick} is true:
+                    kick player due to "&4&lSuspected automatic fishing"
+
+                exit
+
+            delete {antiAutoTimer::%player's uuid%}
+            delete {requiredCommands::%player's uuid%::*}
+            set {requiredCommandsText::%player's uuid%} to ""
+
+            exit
+
+
+
+every 1 seconds:
+    loop all players:
+        if {antiAutoTimer::%loop-player's uuid%} is set:
+
+            if {antiAutoTimer::%loop-player's uuid%} > 4:
+                play sound "block.note_block.pling" with volume 1 and pitch 1.4 for loop-player
+            else:
+                play sound "block.note_block.pling" with volume 1 and pitch 1.8 for loop-player
+
+            remove 1 from {antiAutoTimer::%loop-player's uuid%}
+            if {antiAutoTimer::%loop-player's uuid%} <= 0:
+                send title "&c&lPenalty" with subtitle "You didn't press commands" to loop-player for 3 seconds
+                delete {antiAutoTimer::%loop-player's uuid%}
+                delete {requiredCommands::%loop-player's uuid%::*}
+                set {requiredCommandsText::%loop-player's uuid%} to ""
+
+                dismount any passenger from vehicle of loop-player
+                dismount any passenger from loop-player
+                if {tpLocation} is set:
+                    teleport loop-player to {tpLocation}
+                else:
+                    set {_lookUp} to loop-player's location
+                    set pitch of {_lookUp} to -90
+                    teleport loop-player to {_lookUp}
+                
+                if {autoKick} is true:
+                    kick loop-player due to "&4&lSuspected automatic fishing"
+
+
+
+command /aafSetLocation:
+    trigger:
+        if player is op:
+            set {tpLocation} to player's location
+            message "&a&lSet the penalty teleport location to here"
+            message "&a&l[%player's location%]"
+        else:
+            message "&c&oOP required"
+
+
+
+command /aafSetKick:
+    trigger:
+        if player is op:
+            if {autoKick} is not set:
+                set {autoKick} to true
+                message "&c&lKick the player suspected automatic fishing"
+            else:
+                delete {autoKick}
+                message "&a&lKicking player disabled"
+        else:
+            message "&c&oOP required"
