@@ -1,6 +1,10 @@
 # antiAutoFish.sk  
 ---
-## Bugs were found in which all players who were fishing could not press commands
+
+
+## Bugs were found in which all players who were fishing could not press commands   
+
+
 ---
 >[스크립트 2.6](https://github.com/SkriptLang/Skript/releases)   
 >based on [Skript 2.6](https://github.com/SkriptLang/Skript/releases)   
